@@ -1,0 +1,126 @@
+:root {
+  color-scheme: dark;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  background: radial-gradient(circle at top, #1b1725 0%, #09070c 100%);
+  color: #f4e7ff;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem;
+  display: grid;
+  gap: 2rem;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  color: #d1b3ff;
+}
+
+.heartbeat {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ff4ecd 0%, #5a104c 100%);
+  box-shadow: 0 0 8px rgba(255, 78, 205, 0.6);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+.chat,
+.memory {
+  background: rgba(34, 25, 45, 0.65);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+#conversation {
+  max-height: 340px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.message {
+  padding: 1rem;
+  border-radius: 12px;
+  background: rgba(120, 80, 180, 0.35);
+  backdrop-filter: blur(6px);
+}
+
+textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 0.75rem;
+  border-radius: 10px;
+  border: none;
+  resize: vertical;
+  font-size: 1rem;
+  background: rgba(12, 8, 18, 0.65);
+  color: inherit;
+}
+
+.controls,
+#remember-form {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #ff4ecd, #6b4bff);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(107, 75, 255, 0.4);
+}
+
+#memories {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.memory-item {
+  font-size: 0.95rem;
+  opacity: 0.85;
+}

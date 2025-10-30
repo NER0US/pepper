@@ -1,0 +1,9 @@
+{
+  "grok_online": true,
+  "grok_api_key": "YOUR_GROK_KEY",
+  "model": "llama3.2",
+  "ollama_local": true,
+  "voice_enabled": false,
+  "heartbeat_enabled": true,
+  "max_memories": 5000
+}
