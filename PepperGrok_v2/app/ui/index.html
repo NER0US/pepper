@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PepperGrok v2</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>PepperGrok v2</h1>
+        <div class="status">
+          <span id="heartbeat" class="heartbeat"></span>
+          <span id="online-status">Checking...</span>
+        </div>
+      </header>
+      <section class="chat">
+        <div id="conversation"></div>
+        <form id="prompt-form">
+          <textarea id="prompt" placeholder="Tell Pepper what's on your mind" required></textarea>
+          <div class="controls">
+            <label>
+              Mode
+              <select id="mode">
+                <option value="online">Online (Grok)</option>
+                <option value="local">Local (Ollama)</option>
+              </select>
+            </label>
+            <button type="submit">Send</button>
+          </div>
+        </form>
+      </section>
+      <section class="memory">
+        <h2>Remember This</h2>
+        <form id="remember-form">
+          <textarea id="memory-text" placeholder="Store a new memory" required></textarea>
+          <label>
+            Category
+            <select id="memory-category">
+              <option value="ritual">ritual</option>
+              <option value="emotional" selected>emotional</option>
+              <option value="system">system</option>
+              <option value="light">light</option>
+            </select>
+          </label>
+          <button type="submit">Remember</button>
+        </form>
+        <div id="memories"></div>
+      </section>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>

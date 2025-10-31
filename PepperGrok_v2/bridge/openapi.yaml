@@ -1,0 +1,269 @@
+openapi: 3.1.0
+info:
+  title: Pepper Bridge API
+  version: "1.0.0"
+  description: Local bridge for memory, skills, and persona. Bind to 127.0.0.1 only.
+
+servers:
+  - url: http://127.0.0.1:8000
+
+components:
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: { type: object, additionalProperties: true }
+    MemoryItem:
+      type: object
+      required: [id, ts, role, text, category, pinned, source]
+      properties:
+        id: { type: string }
+        ts: { type: string, format: date-time }
+        role: { type: string, enum: [user, assistant, note] }
+        text: { type: string }
+        category: { type: string, enum: [people, projects, prefs, secrets, misc] }
+        pinned: { type: boolean }
+        source: { type: string }
+        conv_id: { type: string }
+    SearchRequest:
+      type: object
+      required: [query]
+      properties:
+        query: { type: string }
+        k: { type: integer, default: 6, minimum: 1, maximum: 24 }
+        max_tokens: { type: integer, default: 600, minimum: 60, maximum: 1200 }
+    SearchItem:
+      type: object
+      required: [id, category, score, text, pinned]
+      properties:
+        id: { type: string }
+        category: { type: string }
+        score: { type: number }
+        text: { type: string, description: "trimmed <=120 tokens" }
+        pinned: { type: boolean }
+        ts: { type: string, format: date-time }
+        source: { type: string }
+    SearchResponse:
+      type: object
+      required: [query, k, tokens, items, categories]
+      properties:
+        query: { type: string }
+        k: { type: integer }
+        tokens: { type: integer, description: "sum estimate of memory tokens" }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/SearchItem" }
+        categories:
+          type: object
+          additionalProperties: { type: integer }
+    RememberRequest:
+      type: object
+      required: [role, text, category]
+      properties:
+        role: { type: string, enum: [user, assistant, note] }
+        text: { type: string }
+        category: { type: string, enum: [people, projects, prefs, secrets, misc] }
+        pinned: { type: boolean, default: false }
+        conv_id: { type: string }
+    SkillCmdRequest:
+      type: object
+      required: [type]
+      properties:
+        type: { type: string, enum: [cmd, note] }
+        cmd: { type: string, description: "when type=cmd: ls|mv|cp|rm|cat|tail" }
+        args:
+          type: array
+          items: { type: string }
+        timeout_ms: { type: integer, default: 8000, minimum: 1000, maximum: 60000 }
+        text: { type: string, description: "when type=note: free text" }
+        category: { type: string, enum: [people, projects, prefs, secrets, misc] }
+    Identity:
+      type: object
+      required: [persona]
+      properties:
+        persona: { type: string }
+        tokens: { type: integer, description: "approx token count of persona", readOnly: true }
+
+paths:
+  /status:
+    get:
+      summary: Bridge health and caps
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  bridge: { type: string, enum: [up, down] }
+                  mode: { type: string, enum: [local, online] }
+                  local_model: { type: string }
+                  ollama: { type: string, enum: [up, down, unknown] }
+                  latency_ms: { type: integer }
+                  caps:
+                    type: object
+                    properties:
+                      persona_tokens: { type: integer, default: 120 }
+                      memory_tokens: { type: integer, default: 600 }
+                      k: { type: integer, default: 6 }
+                  cache_items: { type: integer }
+                  version: { type: string }
+        default:
+          description: Error
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /search:
+    post:
+      summary: Retrieve top-K memory snippets for augmentation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SearchRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SearchResponse" }
+        default:
+          description: Error
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /remember:
+    post:
+      summary: Append a memory item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RememberRequest" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, ts]
+                properties:
+                  id: { type: string }
+                  ts: { type: string, format: date-time }
+        default:
+          description: Error
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /memories:
+    get:
+      summary: List/search memories
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 50, minimum: 1, maximum: 200 }
+        - in: query
+          name: offset
+          schema: { type: integer, default: 0, minimum: 0 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/MemoryItem" }
+                  next_offset: { type: integer }
+        default:
+          description: Error
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /identity:
+    get:
+      summary: Get persona
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Identity" }
+        default:
+          description: Error
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+    post:
+      summary: Set persona
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Identity" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Identity" }
+        default:
+          description: Error
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /skill:
+    post:
+      summary: Execute local skills (sandboxed FS ops) or create notes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SkillCmdRequest" }
+      responses:
+        "200":
+          description: OK (cmd)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type: { type: string, enum: [cmd] }
+                  ok: { type: boolean }
+                  stdout: { type: string }
+                  stderr: { type: string }
+                  exit_code: { type: integer }
+                  duration_ms: { type: integer }
+        "201":
+          description: Created (note)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string }
+                  ts: { type: string, format: date-time }
+        default:
+          description: Error
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
